@@ -8,6 +8,7 @@ const conf = require('../config/defaultConf');
 const mime = require('../helper/mime');
 const compress = require('../helper/compress');
 const range =require('../helper/range');
+const isFresh = require('../helper/cache');
 
 const tplPath = path.join(__dirname, '../template/dir.html');
 const source = fs.readFileSync(tplPath, 'utf-8');
@@ -18,10 +19,14 @@ module.exports = async function (req, res, filePath) {
         const stats = await stat(filePath);
         if(stats.isFile()){
             const content_type = mime(filePath);
-
             res.setHeader('Content-Type', content_type);
-            // fs.readFile(filePath, (err, data) => {
-            //     res.end(data)});   虽然这也是异步的读取方式，但这需要将整个文件读完之后才可以输出到页面上，性能没有createReadStream好。
+
+            if(isFresh(stats,req,res)){
+                res.statusCode = 304;
+                res.end();
+                return;
+            }
+
             let rs;
             const {code,start, end} = range(stat.size, req,res);
             if(code === 200){
