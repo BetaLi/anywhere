@@ -20,13 +20,11 @@ module.exports = async function (req, res, filePath) {
         if(stats.isFile()){
             const content_type = mime(filePath);
             res.setHeader('Content-Type', content_type);
-
             if(isFresh(stats,req,res)){
                 res.statusCode = 304;
                 res.end();
                 return;
             }
-
             let rs;
             const {code,start, end} = range(stat.size, req,res);
             if(code === 200){
